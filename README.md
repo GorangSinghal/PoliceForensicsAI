@@ -17,6 +17,33 @@ Welcome to the **Police Forensics AI** project, an advanced secure evidence extr
 - **Deterministic Guardrails:** Implements strict regex, fuzzy date parsing, and Word Error Rate (WER) evaluations to completely eliminate AI hallucinations.
 - **Exporting Capabilities:** Seamlessly exports extracted JSON data into flat CSV and Excel reports for precinct archives.
 
+## System Architecture (MLOps & Zero-Trust)
+
+This project is built using enterprise MLOps patterns, specifically focusing on **Dynamic Licensing Routing** (separating commercial math from non-commercial GANs) and **Zero-Trust Edge-to-Cloud fallback**.
+
+```mermaid
+graph TD
+    A[Officer Uploads Evidence] --> B{Deep Learning Toggle}
+    
+    %% Dual Licensing Routing
+    B -->|Disabled (Default)| C[OpenCV Pipeline<br/>MIT Licensed / Commercial Safe]
+    B -->|Enabled (Opt-In)| D[CodeFormer + RealESRGAN<br/>S-Lab License / Research Only]
+    
+    C --> E{Zero-Trust LLM Router}
+    D --> E
+    
+    %% LLM Routing
+    E -->|Cloud Speed| F[Google Gemini 1.5 Flash<br/>Cloud API]
+    E -->|Air-Gapped Security| G[Llama 3.2 Vision<br/>Local Ollama Edge Compute]
+    
+    %% Guardrails
+    F --> H[Deterministic Guardrails<br/>Regex & Date Parsing]
+    G --> H
+    
+    H --> I[Verified JSON Payload]
+    I --> J[CSV / Excel / Database Export]
+```
+
 ## Installation & Setup
 
 ### 1. Developer Setup (Python Environment)
