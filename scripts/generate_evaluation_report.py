@@ -3,6 +3,7 @@ import sys
 import json
 import time
 import jiwer
+import re
 
 # Add src to the python path so imports resolve correctly
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
@@ -12,6 +13,14 @@ from dateutil import parser
 
 # Point this to the artifacts directory so the user can see it in the UI!
 REPORT_PATH = r"C:\Users\Radhe Shyam\.gemini\antigravity-ide\brain\1772646e-7ea3-47ba-b106-faba5f86ae5d\evaluation_report.md"
+
+def normalize_text(text):
+    if not text:
+        return ""
+    text = text.lower()
+    text = re.sub(r'[^a-z0-9\s]', ' ', text)
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
 
 def calculate_entity_accuracy(truth, prediction):
     total_entities = 0
@@ -93,8 +102,15 @@ def generate_report():
             truth_text = truth.get('raw_text', '')
             pred_text = prediction.get('raw_text', '')
             
-            if truth_text and pred_text:
-                error_rate = jiwer.wer(truth_text, pred_text)
+            truth_norm = normalize_text(truth_text)
+            pred_norm = normalize_text(pred_text)
+            
+            if truth_norm and pred_norm:
+                error_rate = jiwer.wer(truth_norm, pred_norm)
+                total_wer += error_rate
+                valid_wer_count += 1
+            elif truth_norm and not pred_norm:
+                error_rate = 1.0 # Missed completely
                 total_wer += error_rate
                 valid_wer_count += 1
             else:
