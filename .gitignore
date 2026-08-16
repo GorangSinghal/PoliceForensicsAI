@@ -1,0 +1,27 @@
+# Environments
+.env
+.venv
+venv/
+
+# Cache
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# PyInstaller Build Artifacts
+build/
+dist/
+*.spec
+
+# Exports (Generated files)
+exports/
+
+# Heavy Deep Learning Weights (Do not push gigabytes to GitHub!)
+weights/
+*.pth
+*.pt
+*.ckpt
+
+# Temporary/OS Files
+.DS_Store
+Thumbs.db
