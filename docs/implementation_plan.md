@@ -4,14 +4,22 @@ We will be migrating the entire project into a new, master folder to represent t
 
 **Proposed Project Name:** `PoliceForensicsAI` 
 
-## 📍 Project Roadmap
-We will build this in strict, test-driven phases to ensure production-level reliability.
+## 📍 Strategic Roadmap & Architecture Phases
+This system is architected in strict, test-driven phases to ensure mission-critical reliability for law enforcement deployment.
 
-* **Phase 1: Foundation & Evaluation (Current)** - Setup the `NexusForensics` folder, initialize the environment, and establish the **Golden Matrix**.
-* **Phase 2: The Core OCR Engine** - Build `ocr_engine.py` (OpenCV + Gemini) and run it against the Golden Matrix to establish baseline accuracy.
-* **Phase 3: Image Restoration Integration** - Migrate the local CodeFormer repo into our master architecture.
-* **Phase 4: The Unified UI** - Build the 3-Tab Gradio Interface (Restoration, OCR, Batch Processing).
-* **Phase 5: Cloud Deployment** - Containerize the app and deploy it to Hugging Face Spaces.
+### ✅ Completed Milestones
+* **Phase 1: Foundation & Evaluation** - Established the `PoliceForensicsAI` repository, Python environments, and the synthetic 100-case **Golden Matrix** for MLOps tracking.
+* **Phase 2: The Core Extraction Engine** - Engineered `ocr_engine.py` using OpenCV contrast maximization and Gemini/Llama routing with deterministic regex guardrails.
+* **Phase 3: Deep Learning GAN Integration** - Successfully bridged the S-Lab CodeFormer PyTorch repository for physical evidence restoration.
+* **Phase 4: Cyber Command Terminal (UI)** - Built a highly responsive, tabbed Gradio interface (`app.py`) featuring dark mode, data export (JSON/CSV/Excel), and compliance toggles.
+* **Phase 5: Enterprise Deployment** - Containerized the application (`Dockerfile`), compiled a Windows standalone executable (`.exe`), and published the PyPI `setup.py` package.
+
+### 🚧 Active & Future Milestones
+* **Phase 5.5: Commercial Up-Scaling** - Decouple Real-ESRGAN from CodeFormer to provide an MIT-licensed, commercial-safe upscaling alternative.
+* **Phase 6: Air-Gapped SLM Engine** - Integrate `moondream2` or `qwen2-vl-2b` natively via Ollama for strictly offline, intranet deployment.
+* **Phase 7: Mobile Field Application** - Build a Flutter iOS/Android client that interfaces with the Python REST API for field officers.
+* **Phase 8: Biometric Video Routing** - Implement YOLOv8 and `facenet-pytorch` for dynamic facial routing against suspect databases.
+* **Phase 9: Security Hardening** - Resolve the Mocking, PII Logging, and Over-Fitting loopholes prior to official production launch.
 
 ---
 
