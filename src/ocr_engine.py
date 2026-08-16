@@ -11,13 +11,18 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class OCREngine:
-    def __init__(self, model_name="gemini-3.5-flash"):
+    def __init__(self, model_name="gemini-1.5-flash"):
         # The new SDK takes the API key directly in the Client constructor.
         self.client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
         self.model_name = model_name
         self.codeformer = CodeFormerBridge(
             codeformer_dir=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "third_party", "CodeFormer")
         )
+        
+    def update_api_key(self, new_key):
+        """Hot-swaps the Gemini API key into the client memory without requiring a restart."""
+        if new_key:
+            self.client = genai.Client(api_key=new_key)
         
     def preprocess_image(self, image_path):
         """
@@ -144,7 +149,11 @@ class OCREngine:
             if llm_provider == "llama3":
                 response_text = call_ollama()
             else:
-                response_text = call_gemini()
+                try:
+                    response_text = call_gemini()
+                except Exception as e:
+                    print(f"\n[⚠️ CLOUD API FAILED]: {e}\n[🛡️ ZERO-TRUST GUARDRAIL]: Automatically falling back to local offline Llama 3 engine...\n")
+                    response_text = call_ollama()
             
             # Clean up JSON if Gemini added markdown
             if response_text.startswith("```json"):

@@ -3,6 +3,7 @@ import json
 import os
 import pandas as pd
 from ocr_engine import OCREngine
+import dotenv
 
 # Initialize the global engine
 engine = OCREngine()
@@ -11,11 +12,17 @@ engine = OCREngine()
 EXPORTS_DIR = os.path.join(os.path.dirname(__file__), "..", "exports")
 os.makedirs(EXPORTS_DIR, exist_ok=True)
 
-def process_evidence(image_path, use_codeformer, llm_provider):
+def process_evidence(image_path, use_codeformer, llm_provider, api_key_input):
     if not image_path:
         return {"error": "No image uploaded."}, None, None, None, None
         
     try:
+        # Persistent Environment Caching: Hot-swap the API key if it's new
+        if api_key_input and api_key_input != os.getenv("GEMINI_API_KEY"):
+            env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
+            dotenv.set_key(env_path, "GEMINI_API_KEY", api_key_input)
+            os.environ["GEMINI_API_KEY"] = api_key_input
+            engine.update_api_key(api_key_input)
         # Check if Ollama is running if Llama is selected
         if llm_provider == "llama3":
             import requests
@@ -106,17 +113,20 @@ h1 {
 .primary:hover {
     box-shadow: 0 0 25px rgba(0, 242, 254, 0.9) !important;
 }
+#api_key_box textarea:disabled, #api_key_box input:disabled {
+    cursor: not-allowed !important;
+}
 """
 
 with gr.Blocks(title="PoliceForensicsAI Cyber Terminal") as app:
     gr.Markdown("# 🚓 FORENSICS AI : CYBER COMMAND TERMINAL")
     gr.Markdown("*Secure Evidence Extraction System. Powered by Google Gemini & PyTorch.*")
             
-    with gr.Accordion("🛡️ Anti-Hallucination Guardrails Active | 📊 Certified 1.2% WER | 🔒 Offline Air-Gapped Ready (Click for Proof)", open=False):
+    with gr.Accordion("🛡️ Anti-Hallucination Guardrails Active | 📊 Continuously Evaluated WER | 🔒 Offline Air-Gapped Ready (Click for Proof)", open=False):
         gr.Markdown('''
         **🛡️ Anti-Hallucination Guardrails:** Utilizes strict SpaCy Named Entity Recognition (NER) and deterministic Regex validation pipelines. If the LLM attempts to hallucinate non-standard formats, the guardrail intercepts and sanitizes the payload before database entry.
         
-        **📊 Certified 1.2% WER:** System rigorously benchmarked against the `100-Case Synthetic Golden Matrix`. Tests evaluate Word Error Rate (WER) against heavy Gaussian blur, out-of-distribution (OOD) rotations, and severe signal noise to guarantee reliability.
+        **📊 Continuously Evaluated WER:** System is rigorously benchmarked against the `100-Case Synthetic Golden Matrix`. Tests evaluate Word Error Rate (WER) against heavy Gaussian blur, out-of-distribution (OOD) rotations, and severe signal noise to guarantee evolving reliability across milestones.
         
         **🔒 Offline Air-Gapped Ready:** The architecture supports a Strategy Pattern allowing dynamic switching from Cloud APIs (`gemini-1.5-flash`) to a local 11B parameter edge-compute model (`llama3.2-vision`) for zero-trust, classified intranet environments.
         ''')
@@ -136,6 +146,21 @@ with gr.Blocks(title="PoliceForensicsAI Cyber Terminal") as app:
                 info="Select Gemini Cloud for speed, or Llama 3.2 Vision Local for offline security.",
                 value="gemini"
             )
+            with gr.Accordion("⚙️ API Key Settings", open=False, elem_id="api_key_accordion") as api_key_accordion:
+                gr.Markdown("**🔑 Gemini API Key**<br><small>Your key is securely cached locally. Update it here at any time.</small>")
+                with gr.Group():
+                    with gr.Row(equal_height=True):
+                        api_key_input = gr.Textbox(
+                            show_label=False, 
+                            type="password", 
+                            value=os.getenv("GEMINI_API_KEY", ""),
+                            interactive=False,
+                            scale=10,
+                            elem_id="api_key_box",
+                            container=False
+                        )
+                        edit_key_btn = gr.Button("🔄 Edit", size="sm", scale=0, min_width=80)
+                
             submit_btn = gr.Button("⚡ INITIATE FORENSICS EXTRACTION", variant="primary")
             
         # Right Column: Outputs & Verification
@@ -159,12 +184,33 @@ with gr.Blocks(title="PoliceForensicsAI Cyber Terminal") as app:
         inputs=[use_dl_toggle],
         outputs=None
     )
+    
+    # Dynamic Visibility for API Key
+    def toggle_api_key(llm_choice):
+        # Hide the entire accordion if Llama 3 is selected
+        return gr.update(visible=(llm_choice == "gemini"))
+        
+    llm_provider.change(
+        fn=toggle_api_key,
+        inputs=[llm_provider],
+        outputs=[api_key_accordion]
+    )
+    
+    # Unlock API Key for editing
+    def unlock_key():
+        return gr.update(interactive=True, value="")
+        
+    edit_key_btn.click(
+        fn=unlock_key,
+        inputs=None,
+        outputs=[api_key_input]
+    )
             
     # Bind the button to the function
     # Note: image download button is not needed separately since gr.Image already has a built-in download button in the top right corner!
     submit_btn.click(
         fn=process_evidence,
-        inputs=[input_image, use_dl_toggle, llm_provider],
+        inputs=[input_image, use_dl_toggle, llm_provider, api_key_input],
         outputs=[output_json, output_image, dl_json, dl_csv, dl_excel]
     )
 
