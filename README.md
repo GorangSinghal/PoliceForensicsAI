@@ -26,22 +26,22 @@ graph TD
     A[Officer Uploads Evidence] --> B{Deep Learning Toggle}
     
     %% Dual Licensing Routing
-    B -->|Disabled (Default)| C[OpenCV Pipeline<br/>MIT Licensed / Commercial Safe]
-    B -->|Enabled (Opt-In)| D[CodeFormer + RealESRGAN<br/>S-Lab License / Research Only]
+    B -->|Disabled Default| C["OpenCV Pipeline<br/>MIT Licensed / Commercial Safe"]
+    B -->|Enabled Opt-In| D["CodeFormer + RealESRGAN<br/>S-Lab License / Research Only"]
     
     C --> E{Zero-Trust LLM Router}
     D --> E
     
     %% LLM Routing
-    E -->|Cloud Speed| F[Google Gemini 1.5 Flash<br/>Cloud API]
-    E -->|Air-Gapped Security| G[Llama 3.2 Vision<br/>Local Ollama Edge Compute]
+    E -->|Cloud Speed| F["Google Gemini 1.5 Flash<br/>Cloud API"]
+    E -->|Air-Gapped Security| G["Llama 3.2 Vision<br/>Local Ollama Edge Compute"]
     
     %% Guardrails
-    F --> H[Deterministic Guardrails<br/>Regex & Date Parsing]
+    F --> H["Deterministic Guardrails<br/>Regex & Date Parsing"]
     G --> H
     
     H --> I[Verified JSON Payload]
-    I --> J[CSV / Excel / Database Export]
+    I --> J["CSV / Excel / Database Export"]
 ```
 
 ## Installation & Setup
