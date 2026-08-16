@@ -168,7 +168,10 @@ with gr.Blocks(title="PoliceForensicsAI Cyber Terminal") as app:
         outputs=[output_json, output_image, dl_json, dl_csv, dl_excel]
     )
 
-if __name__ == "__main__":
+def main():
     print("Booting Cyber Terminal...")
     asset_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets")
     app.launch(server_name="0.0.0.0", server_port=7860, allowed_paths=[asset_dir], theme=cyber_theme, css=custom_css)
+
+if __name__ == "__main__":
+    main()
