@@ -1,8 +1,6 @@
 # PoliceForensicsAI: Evidence Processing Toolkit (MLOps & Implementation Plan)
 
-We will be migrating the entire project into a new, master folder to represent the complete software suite. This project will follow strict MLOps (Machine Learning Operations) and FAANG-level testing practices.
-
-**Proposed Project Name:** `PoliceForensicsAI` 
+**Project Name:** `PoliceForensicsAI` 
 
 ## 📍 Strategic Roadmap & Architecture Phases
 This system is architected in strict, test-driven phases to ensure mission-critical reliability for law enforcement deployment.
@@ -41,7 +39,7 @@ Instead of guessing if a prompt is good, we will use the Golden Matrix to mathem
 
 ---
 
-## 📁 Master Folder Structure & Repo Standards (sipllm-inspired)
+## 📁 Master Folder Structure & Repo Standards
 
 ```text
 PoliceForensicsAI/
@@ -84,8 +82,3 @@ PoliceForensicsAI/
 2. **LLM Prompting:** Gemini API extracts the text using strict Few-Shot prompts.
 3. **Deterministic Guardrails:** Python Regex and SpaCy cross-validate the dates and license plates, marking hallucinations in RED.
 
----
-
-## User Review Required
-> [!IMPORTANT]
-> The plan now officially incorporates strict **MLOps Testing**, a **Roadmap**, and a **Golden Matrix** for mathematical evaluation. Does this level of engineering rigor look good to you? If so, we will kick off **Phase 1** and start creating this structure!

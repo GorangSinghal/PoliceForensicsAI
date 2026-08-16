@@ -1,5 +1,4 @@
 # PoliceForensicsAI Engineering Checklist
-*(Inspired by PR #49 Post-Mortem)*
 
 This checklist must be followed before merging any Pull Request to ensure we are building a robust, production-ready forensic tool, rather than a brittle prototype that only passes test cases.
 

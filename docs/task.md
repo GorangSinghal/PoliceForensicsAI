@@ -13,16 +13,16 @@
     - `[x]` Run the evaluation suite and iterate on the prompt until target accuracy is reached
 
 - `[x]` **Phase 3: CodeFormer Integration (Image Restoration)**
-    - `[ ]` Migrate the local CodeFormer module into `third_party/CodeFormer/`
-    - `[ ]` Write `modules/codeformer_bridge.py` to interface with the PyTorch GAN
-    - `[ ]` Ensure VRAM override limits (40,000px) are hardcoded into the bridge
+    - `[x]` Migrate the local CodeFormer module into `third_party/CodeFormer/`
+    - `[x]` Write `modules/codeformer_bridge.py` to interface with the PyTorch GAN
+    - `[x]` Ensure VRAM override limits (40,000px) are hardcoded into the bridge
 
 - `[x]` **Phase 4: Unified UI (Frontend & Exporting)**
-    - `[ ]` Design and build `main_app.py` using Gradio Tabs
-    - `[ ]` Connect Tab 1 (Image Restoration) to the CodeFormer bridge
-    - `[ ]` Connect Tab 2 (Document OCR) to the OCR engine
-    - `[ ]` Connect Tab 3 (Batch Processing) for high-throughput folder scanning
-    - `[ ]` Implement "Export to CSV" and "Export to Excel (.xlsx)" functionality for police record keeping
+    - `[x]` Design and build `main_app.py` using Gradio Tabs
+    - `[x]` Connect Tab 1 (Image Restoration) to the CodeFormer bridge
+    - `[x]` Connect Tab 2 (Document OCR) to the OCR engine
+    - `[x]` Connect Tab 3 (Batch Processing) for high-throughput folder scanning
+    - `[x]` Implement "Export to CSV" and "Export to Excel (.xlsx)" functionality for police record keeping
 
 - `[x]` **Phase 5: Cloud Deployment, Open Source & Production Readiness**
     - `[x]` Containerize the application (`Dockerfile`)
