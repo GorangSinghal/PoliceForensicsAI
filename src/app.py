@@ -8,6 +8,17 @@ import dotenv
 # Initialize the global engine
 engine = OCREngine()
 
+# Startup Discovery Logic
+weights_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "weights")
+os.makedirs(weights_dir, exist_ok=True)
+pro_mode = False
+for f in os.listdir(weights_dir):
+    if f.endswith(".gguf") and os.path.getsize(os.path.join(weights_dir, f)) > 3 * 1024 * 1024 * 1024:
+        pro_mode = True
+        break
+
+MODE_BADGE = "⚡ PRO MODE (Llama 8B Active)" if pro_mode else "🪶 LITE MODE (TinyLlama 1B Active)"
+
 # Ensure exports directory exists
 EXPORTS_DIR = os.path.join(os.path.dirname(__file__), "..", "exports")
 os.makedirs(EXPORTS_DIR, exist_ok=True)
@@ -23,22 +34,7 @@ def process_evidence(image_path, use_codeformer, llm_provider, api_key_input):
             dotenv.set_key(env_path, "GEMINI_API_KEY", api_key_input)
             os.environ["GEMINI_API_KEY"] = api_key_input
             engine.update_api_key(api_key_input)
-        # Check if Ollama is running if Llama is selected
-        if llm_provider == "llama3":
-            import requests
-            try:
-                # 11434 is the default Ollama port
-                r = requests.get("http://localhost:11434/", timeout=2)
-                if r.status_code != 200:
-                    raise Exception()
-            except Exception:
-                error_json = {
-                    "error": "🚨 OLLAMA ENGINE NOT DETECTED!",
-                    "message": "The UI architecture is ready, but the physical Llama engine is not installed on this machine.",
-                    "resolution": "Please install Ollama and run `ollama run llama3.2-vision` to enable the Air-Gapped Offline Mode."
-                }
-                return error_json, None, None, None, None
-                
+            
         # Run the engine
         json_data, processed_img_path = engine.extract_entities(
             image_path, 
@@ -136,14 +132,14 @@ with gr.Blocks(title="PoliceForensicsAI Cyber Terminal") as app:
         with gr.Column(scale=1):
             input_image = gr.Image(type="filepath", label="Upload Evidence (Image / Dashcam)", height=350, elem_id="black-drop-box")
             use_dl_toggle = gr.Checkbox(
-                label="Enable Deep Learning Restoration (CodeFormer + RealESRGAN)",
+                label="Enable Deep Learning Restoration (CodeFormer GAN)",
                 info="⚠️ COMPLIANCE WARNING: Invokes CodeFormer GAN. Governed by strict S-Lab Non-Commercial/Research License. By checking this box, the agency assumes all legal compliance liability.",
                 value=False
             )
             llm_provider = gr.Radio(
-                choices=[("☁️ Gemini Cloud API", "gemini"), ("🔒 Llama 3.2 Vision (⚠️ REQUIRES LOCAL OLLAMA)", "llama3")],
-                label="LLM Backend",
-                info="Select Gemini Cloud for speed, or Llama 3.2 Vision Local for offline security.",
+                choices=[("☁️ Gemini Cloud API", "gemini"), ("Offline Edge Mode (EasyOCR + Llama 3)", "offline")],
+                label="Extraction Engine",
+                info="Choose between cloud-scale accuracy or air-gapped security.",
                 value="gemini"
             )
             with gr.Accordion("⚙️ API Key Settings", open=False, elem_id="api_key_accordion") as api_key_accordion:
@@ -160,7 +156,9 @@ with gr.Blocks(title="PoliceForensicsAI Cyber Terminal") as app:
                             container=False
                         )
                         edit_key_btn = gr.Button("🔄 Edit", size="sm", scale=0, min_width=80)
-                
+            
+            hardware_badge = gr.Markdown(f"### Current Hardware Configuration:\n<div style='padding: 10px; border: 1px solid #00f2fe; border-radius: 5px; background-color: #0d1117; color: #00f2fe; font-weight: bold; text-align: center; font-size: 1.2em;'>{MODE_BADGE}</div>\n<small>*Drop a 5GB Llama .gguf file into the `weights/` folder to automatically unlock PRO mode.*</small>", visible=False)
+            
             submit_btn = gr.Button("⚡ INITIATE FORENSICS EXTRACTION", variant="primary")
             
         # Right Column: Outputs & Verification
@@ -185,15 +183,16 @@ with gr.Blocks(title="PoliceForensicsAI Cyber Terminal") as app:
         outputs=None
     )
     
-    # Dynamic Visibility for API Key
-    def toggle_api_key(llm_choice):
-        # Hide the entire accordion if Llama 3 is selected
-        return gr.update(visible=(llm_choice == "gemini"))
+    # Dynamic Visibility for API Key and Hardware Badge
+    def toggle_backend(llm_choice):
+        show_api = (llm_choice == "gemini")
+        show_hw = (llm_choice == "offline")
+        return gr.update(visible=show_api), gr.update(visible=show_hw)
         
     llm_provider.change(
-        fn=toggle_api_key,
+        fn=toggle_backend,
         inputs=[llm_provider],
-        outputs=[api_key_accordion]
+        outputs=[api_key_accordion, hardware_badge]
     )
     
     # Unlock API Key for editing

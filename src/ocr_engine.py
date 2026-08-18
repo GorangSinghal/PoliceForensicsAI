@@ -72,10 +72,11 @@ class OCREngine:
 
     def extract_entities(self, image_path, use_codeformer=False, return_image_path=False, llm_provider="gemini"):
         """
-        Main extraction pipeline.
-        1. Preprocess Image (Normalization or CodeFormer GAN)
-        2. LLM Extraction (Gemini Cloud or Llama 3 Local)
-        3. Deterministic Guardrails
+        Main extraction pipeline (Kraken + SLM).
+        1. Preprocess Image (CodeFormer GAN)
+        2. Kraken OCR Extraction (Vision)
+        3. Local SLM Extraction (NLP Parsing)
+        4. Deterministic Guardrails
         """
         if use_codeformer:
             processed_img_path = self.codeformer.enhance_image(image_path)
@@ -115,56 +116,97 @@ class OCREngine:
             # Generate content using the new SDK
             # Set temperature=0.0 for deterministic, non-hallucinated extractions
             response = self.client.models.generate_content(
-                model=self.model_name,
+                model='gemini-1.5-flash',
                 contents=[sample_file, prompt],
                 config=genai.types.GenerateContentConfig(
                     temperature=0.0
                 )
             )
             return response.text.strip()
-            
-        def call_ollama():
+        
+        def run_easyocr(img_path):
+            import easyocr
+            print("\n[EASYOCR] Reading pixels...")
+            # We initialize EasyOCR in English mode
+            reader = easyocr.Reader(['en'], verbose=False)
+            # Detail=0 returns just a list of text strings
+            results = reader.readtext(img_path, detail=0)
+            return "\n".join(results)
+
+        def call_local_slm(raw_text):
             import requests
-            import base64
-            # Ollama requires base64 encoded images
-            with open(processed_img_path, "rb") as image_file:
-                encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
-            
+            print(f"\n[SLM PARSING] Feeding Kraken text to local Language Model...")
             url = "http://localhost:11434/api/generate"
+            
+            # Check for PRO vs LITE weights in the folder
+            weights_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "weights")
+            pro_mode = any(f.endswith('.gguf') and os.path.getsize(os.path.join(weights_dir, f)) > 3 * 1024 * 1024 * 1024 for f in os.listdir(weights_dir)) if os.path.exists(weights_dir) else False
+            
+            slm_model = "llama3" if pro_mode else "llama3.2:1b"
+            
+            # Use XML Structured Tags for smaller edge models to prevent JSON corruption
+            xml_prompt = """
+            You are a forensic OCR expert. Extract the following information from the provided police evidence RAW OCR TEXT.
+            Do not write any conversational text. ONLY return the requested XML tags populated with the extracted data.
+            Format your output exactly like this:
+            <license_plate></license_plate>
+            <date></date>
+            <name></name>
+            <raw_text></raw_text> <!-- YOU MUST COPY THE ENTIRE RAW OCR TEXT HERE VERBATIM. DO NOT SUMMARIZE. DO NOT TRUNCATE. -->
+            """
+            
+            slm_prompt = xml_prompt + f"\n\n--- RAW OCR TEXT ---\n{raw_text}\n--- END RAW TEXT ---"
+            
             payload = {
-                "model": "llama3.2-vision", # Vision variant required for image OCR
-                "prompt": prompt,
-                "images": [encoded_string],
+                "model": slm_model,
+                "prompt": slm_prompt,
                 "stream": False,
                 "options": {
-                    "temperature": 0.0
+                    "temperature": 0.0,
+                    "num_predict": 500,
+                    "repeat_penalty": 1.1
                 }
             }
             response = requests.post(url, json=payload, timeout=120)
             if response.status_code != 200:
-                raise Exception(f"Ollama server returned {response.status_code}: {response.text}")
+                raise Exception(f"SLM Server returned {response.status_code}: {response.text}")
             return response.json().get("response", "").strip()
             
         try:
-            if llm_provider == "llama3":
-                response_text = call_ollama()
-            else:
-                try:
-                    response_text = call_gemini()
-                except Exception as e:
-                    print(f"\n[⚠️ CLOUD API FAILED]: {e}\n[🛡️ ZERO-TRUST GUARDRAIL]: Automatically falling back to local offline Llama 3 engine...\n")
-                    response_text = call_ollama()
-            
-            # Clean up JSON if Gemini added markdown
-            if response_text.startswith("```json"):
-                response_text = response_text[7:]
-            if response_text.endswith("```"):
-                response_text = response_text[:-3]
+            if llm_provider == "gemini":
+                response_text = call_gemini()
                 
-            extracted_data = json.loads(response_text.strip())
+                # Cloud Mode Parse: Clean up JSON if necessary
+                import re
+                json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+                if json_match:
+                    response_text = json_match.group(0)
+                extracted_data = json.loads(response_text.strip())
+                
+            else:
+                # Offline Edge Mode
+                # Step 1: EasyOCR extracts text
+                ocr_text = run_easyocr(processed_img_path)
+                
+                # Step 2: SLM parses into XML Tags
+                response_text = call_local_slm(ocr_text)
+                
+                # Edge Mode Parse: Extract XML Tags via Regex
+                import re
+                extracted_data = {}
+                plate_match = re.search(r'<license_plate>(.*?)</license_plate>', response_text, re.IGNORECASE | re.DOTALL)
+                date_match = re.search(r'<date>(.*?)</date>', response_text, re.IGNORECASE | re.DOTALL)
+                name_match = re.search(r'<name>(.*?)</name>', response_text, re.IGNORECASE | re.DOTALL)
+                raw_match = re.search(r'<raw_text>(.*?)</raw_text>', response_text, re.IGNORECASE | re.DOTALL)
+                
+                extracted_data['license_plate'] = plate_match.group(1).strip() if plate_match else ""
+                extracted_data['date'] = date_match.group(1).strip() if date_match else ""
+                extracted_data['name'] = name_match.group(1).strip() if name_match else ""
+                extracted_data['raw_text'] = raw_match.group(1).strip() if raw_match else ""
+
             
         except Exception as e:
-            print(f"LLM Extraction failed: {e}")
+            print(f"Extraction failed: {e}")
             extracted_data = {}
             
         # Clean up temporary processed image ONLY if we aren't returning it to the UI
