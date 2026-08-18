@@ -13,7 +13,7 @@ Law enforcement agencies sit on massive backlogs of degraded evidence—ranging 
 
 ### 1. Hybrid OCR Pipeline (Fusing Determinism with GenAI)
 **The Concept:** Instead of blindly passing an entire image to an API, the system uses a hybrid approach. 
-**The Code-Level Example:** We use traditional Computer Vision (OpenCV) to perform layout analysis and draw bounding boxes around text blocks *first*. Only those specific cropped segments are sent to the Google Gemini Vision API.
+**The Code-Level Example:** **Dual-Engine Architecture:** Uses EasyOCR for structural layout analysis and a local Small Language Model (SLM) for semantic information extraction, completely bypassing cloud API dependencies.
 **The Analogy:** It is like giving a student an exam where the important questions are already highlighted, rather than just throwing a massive textbook at them and asking them to find the answers.
 **Why FAANG cares:** It proves you know how to reduce the "hallucination space" of an LLM by constraining its inputs using traditional, highly efficient algorithms.
 
@@ -28,6 +28,12 @@ Law enforcement agencies sit on massive backlogs of degraded evidence—ranging 
 **The Code-Level Example:** Rather than just running the pre-trained CodeFormer script, I went directly into the PyTorch inference code (`app.py`). The original researchers hardcoded a 4,000-pixel heuristic limit that forced the system to bypass the background enhancer to save memory. I manually overrode this tensor restriction (bumping it to 4,000,000 pixels), forcing the GAN to process the entire high-resolution frame locally. 
 **The Analogy:** Instead of letting the car's automatic transmission shift for me, I popped the hood and switched it to manual so I could tow a much heavier load than the manufacturer intended.
 **Why FAANG cares:** It proves you aren't afraid to dive into the core PyTorch source code to manipulate tensor flow and optimize for specific hardware constraints.
+
+### 4. Architectural Strategy: The Hybrid Cloud/Edge Pipeline
+**The Concept:** Forensic data security requires air-gapped processing, but accuracy requires massive parameters.
+**The Code-Level Example:** I implemented a dynamic strategy pattern. For field laptops, the system loads `TinyLlama` (1B parameters) on CPU/RAM. If the system detects a precinct server with a dedicated GPU, it automatically performs a hot-swap to `Llama 3 8B` using 4-bit quantization, significantly boosting reasoning quality for complex crime scene reconstruction.
+**The Analogy:** The system is like a specialized search-and-rescue team that carries only essential tools when trekking through difficult terrain (Edge/Laptop), but pulls out the heavy machinery when they arrive at the base camp (Cloud/Server).
+**Why FAANG cares:** It demonstrates "system-level thinking"—the ability to balance the trade-offs between local compute constraints, latency, and model intelligence.
 
 ---
 

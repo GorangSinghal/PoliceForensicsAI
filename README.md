@@ -13,7 +13,7 @@ Welcome to the **Police Forensics AI** project, an advanced secure evidence extr
   - **CodeFormer GAN (Opt-In - Research S-Lab):** For heavily degraded images, users can toggle the Deep Learning PyTorch bridge. This runs CodeFormer + Real-ESRGAN to computationally restore human faces and background text. *Note: This path invokes an S-Lab Non-Commercial license and requires strict legal compliance.*
 - **Pluggable LLM Architecture:** 
   - **Gemini Cloud (Default):** Lightning-fast structured extraction using Google's Gemini Flash.
-  - **Llama 3 Local (Fallback):** 100% offline edge-computing extraction using Ollama for maximum evidence security.
+  - **Dynamic Offline Edge Mode:** 100% air-gapped extraction using local `.gguf` Small Language Models (SLMs). Booting natively defaults to **LITE MODE** (TinyLlama 1B). Automatically detects large weight files to unlock **PRO MODE** (Llama 8B).
 - **Deterministic Guardrails:** Implements strict regex, fuzzy date parsing, and Word Error Rate (WER) evaluations to completely eliminate AI hallucinations.
 - **Exporting Capabilities:** Seamlessly exports extracted JSON data into flat CSV and Excel reports for precinct archives.
 
@@ -34,7 +34,7 @@ graph TD
     
     %% LLM Routing
     E -->|Cloud Speed| F["Google Gemini 1.5 Flash<br/>Cloud API"]
-    E -->|Air-Gapped Security| G["Llama 3.2 Vision<br/>Local Ollama Edge Compute"]
+    E -->|Air-Gapped Security| G["Local .gguf SLM<br/>LITE Mode or PRO Mode"]
     
     %% Guardrails
     F --> H["Deterministic Guardrails<br/>Regex & Date Parsing"]
@@ -63,6 +63,15 @@ For non-technical officers, you can download the standalone `.exe` folder.
 For IT infrastructure deployment:
 1. Build the image: `docker build -t police-forensics-ai .`
 2. Run the container: `docker run -p 7860:7860 police-forensics-ai`
+
+## 🚀 How to Upgrade to PRO Mode (Offline)
+This application uses a dynamic "Drop-In" architecture for offline inference. It requires no complex installations.
+
+1. **LITE MODE (Default):** Out of the box, the system uses a bundled TinyLlama 1B model, which runs on basic precinct laptops.
+2. **PRO MODE (Llama 8B):** If your hardware can support an 8-Billion parameter model, you can instantly unlock PRO mode:
+    * Download a standard `llama-3-8b.gguf` file (or any `.gguf` larger than 3GB) from Hugging Face.
+    * Drag and drop the `.gguf` file directly into the `weights/` folder.
+    * Restart the application. The UI will automatically detect the massive file and display the **⚡ PRO MODE** badge!
 
 ## Project Architecture
 - `src/app.py`: The Gradio User Interface.

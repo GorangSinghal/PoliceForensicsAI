@@ -33,16 +33,16 @@
     - `[x]` Ensure MIT License is applied to all open-source components
     - `[x]` Deploy to Hugging Face Spaces / GitHub
 
-- `[ ]` **Phase 5.5: Standalone Commercial Real-ESRGAN Pipeline**
-    - `[ ]` Write `modules/realesrgan_bridge.py` to decouple Real-ESRGAN from CodeFormer
-    - `[ ]` Update the Gradio UI to include a 3-way Radio Button (OpenCV vs Real-ESRGAN vs CodeFormer)
-    - `[ ]` Test Real-ESRGAN standalone upscaling on license plates to verify commercial-safe inference
+- `[❌]` **Phase 5.5: Standalone Commercial Real-ESRGAN Pipeline**
+    - `[❌]` Integrate Real-ESRGAN to test commercial viability.
+    - `[❌]` Evaluate results: Commercial GANs introduce Generative Smoothing and destroy text.
+    - `[❌]` Rollback architecture and document failure to justify S-Lab CodeFormer Licensing.
 
-- `[ ]` **Phase 6: Offline SLM Engine Implementation (Ollama)**
-    - `[ ]` Install Ollama natively on the target deployment machine
-    - `[ ]` Evaluate and benchmark Small Language Models (SLMs) that fit within 8GB RAM (e.g. `moondream2` or `qwen2-vl-2b`)
-    - `[ ]` Re-run the 100-Case Evaluation Suite purely offline to certify Air-Gapped accuracy
-    - `[ ]` Remove the UI warning label once the physical engine is successfully detected on `localhost:11434`
+- `[x]` **Phase 6: Offline SLM Engine Implementation (Dynamic .gguf Architecture)**
+    - `[x]` Pivot from native Ollama dependency to a fully bundled `.gguf` weight detection system.
+    - `[x]` Evaluate and benchmark Small Language Models (SLMs) (e.g. `TinyLlama 1B` for LITE mode).
+    - `[x]` Re-run the 100-Case Evaluation Suite purely offline to certify Air-Gapped accuracy.
+    - `[x]` Build a dynamic Hardware Badge in the UI that auto-unlocks PRO Mode when 8B `.gguf` weights are detected.
 
 - `[ ]` **Phase 7: Mobile Application Scaling (Flutter)**
     - `[ ]` Expose the existing Python OCR/GAN backend as a REST API (using FastAPI or Flask)
@@ -62,5 +62,11 @@
 
 - `[ ]` **Phase 9: Security & QA Polish (Enterprise Hardening)**
     - `[ ]` **Fix Mocking Loophole:** Write an un-mocked Integration Test suite that hits a local LLM or sandbox API to verify true end-to-end OCR math.
+    - `[ ]` Implement robust Error Handling for malformed JSON returns and Edge Cases
+    - `[ ]` Sanitize the GitHub Repo (Remove hardcoded paths, add `.env.example`, write a FAANG-level `README.md` and `DEPLOYMENT.md`)
     - `[ ]` **Fix PII Logging Loophole:** Audit `src/ocr_engine.py` and replace all raw `print(e)` exceptions with sanitized, generic error loggers to ensure zero PII leakage on crash.
     - `[ ]` **Fix Over-Fitting Loophole:** Siphon 100 actual, physical Out-Of-Distribution (OOD) degraded images into `golden/data/` to replace the synthetic evaluation script.
+
+- `[ ]` **Phase 10: FAANG / GSoC Mock Interview**
+    - `[ ]` Type `/grill-me` in the chat to initiate a brutal Mock Interview covering the architectural decisions of PoliceForensicsAI.
+
