@@ -24,8 +24,9 @@ jobs:
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest pytest-cov
+        # We bypass requirements.txt because local pip freeze dumps contain OS-specific locked wheels
+        pip install fastapi uvicorn python-multipart pytest pytest-cov pandas opencv-python torch torchvision pydantic python-dotenv gradio httpx
+
 
     - name: Run Deterministic Guardrail Tests
       run: |
