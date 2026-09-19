@@ -1,0 +1,39 @@
+name: PoliceForensicsAI Enterprise CI/CD
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  integration-tests:
+    name: Run PyTest Integration Suite
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10"
+        cache: 'pip' # Caches dependencies to speed up subsequent runs
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+
+    - name: Run Deterministic Guardrail Tests
+      run: |
+        # Runs the pytest suite and generates a coverage report
+        pytest tests/ -v --cov=src
+        
+    - name: Security Audit (Bandit)
+      run: |
+        # Scans the codebase for security vulnerabilities (e.g., hardcoded API keys)
+        pip install bandit
+        bandit -r src/ -c bandit.yaml || true # Set to true to not fail the build on first run
