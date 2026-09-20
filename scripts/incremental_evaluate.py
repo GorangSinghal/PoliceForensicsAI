@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 from ocr_engine import OCREngine
 
 PROGRESS_FILE = os.path.join(os.path.dirname(__file__), '..', 'exports', 'eval_offline_progress.json')
-REPORT_PATH = r"C:\Users\Radhe Shyam\.gemini\antigravity-ide\brain\1772646e-7ea3-47ba-b106-faba5f86ae5d\offline_evaluation_report.md"
+REPORT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'reports', 'offline_evaluation_report.md'))
 
 def normalize_text(text):
     if not text:
@@ -133,6 +133,7 @@ def generate_markdown_report(progress_data):
         report_lines.append(f"| `<pre>{truth_json}</pre>` | `<pre>{pred_json}</pre>` |")
         report_lines.append("")
 
+    os.makedirs(os.path.dirname(REPORT_PATH), exist_ok=True)
     with open(REPORT_PATH, 'w', encoding='utf-8') as f:
         f.write("\n".join(report_lines))
 

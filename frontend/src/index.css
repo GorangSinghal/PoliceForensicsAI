@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #000000; /* Pure Black for Max Contrast */
+    background-image: radial-gradient(circle at 50% 50%, #0a0a0a 0%, #000000 100%);
+    background-position: center;
+    background-attachment: fixed;
+    color: #e2e8f0;
+    font-family: 'JetBrains Mono', monospace; /* Default to mono for a true terminal feel */
+  }
+
+  /* Scanner Animation */
+  @keyframes scan {
+    0% { top: 0%; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+  }
+  .animate-scan {
+    animation: scan 2s linear infinite;
+  }
+}
+
+@layer utilities {
+  .font-orbitron {
+    font-family: 'Orbitron', sans-serif;
+  }
+  
+  /* Cyber Monday / Premium High-Tech Panels */
+  .glass-panel {
+    background: linear-gradient(135deg, rgba(5, 5, 5, 0.98) 0%, rgba(0, 0, 0, 1) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(16, 185, 129, 0.6); /* Emerald Green border */
+    box-shadow: 0 0 40px rgba(4, 120, 87, 0.3), inset 0 0 20px rgba(16, 185, 129, 0.15);
+  }
+
+  .glow-text {
+    text-shadow: 0 0 10px rgba(56, 189, 248, 0.5), 0 0 20px rgba(56, 189, 248, 0.3);
+  }
+  
+  .glow-button {
+    background: linear-gradient(90deg, rgba(16, 185, 129, 0.8) 0%, rgba(4, 120, 87, 0.9) 100%);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+    transition: all 0.3s ease;
+    border: 1px solid #34d399;
+    color: #ffffff;
+  }
+  
+  .glow-button:hover:not(:disabled) {
+    box-shadow: 0 0 35px rgba(16, 185, 129, 0.8), inset 0 0 15px rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px) scale(1.02);
+  }
+
+  .glow-button:disabled {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: none;
+    color: #64748b;
+    cursor: not-allowed;
+  }
+
+  .bg-grid-pattern {
+    background-size: 30px 30px;
+    background-image: linear-gradient(to right, rgba(56, 189, 248, 0.03) 1px, transparent 1px),
+                      linear-gradient(to bottom, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
+  }
+}

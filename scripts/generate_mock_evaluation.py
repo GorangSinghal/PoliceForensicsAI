@@ -2,8 +2,8 @@ import os
 import random
 import time
 
-# Point this to the artifacts directory so the user can see it in the UI!
-REPORT_PATH = r"C:\Users\Radhe Shyam\.gemini\antigravity-ide\brain\1772646e-7ea3-47ba-b106-faba5f86ae5d\evaluation_report.md"
+# Point this to the reports directory
+REPORT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'reports', 'evaluation_report.md'))
 
 def generate_mock_report():
     print("========================================")
@@ -56,6 +56,7 @@ def generate_mock_report():
         )
         
         # Write intermediate report (simulating processing time)
+        os.makedirs(os.path.dirname(REPORT_PATH), exist_ok=True)
         with open(REPORT_PATH, 'w', encoding='utf-8') as f:
             f.write("\n".join(report_lines))
             

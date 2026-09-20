@@ -25,3 +25,8 @@ weights/
 # Temporary/OS Files
 .DS_Store
 Thumbs.db
+
+#Real-ESRGAN
+site/
+third_party/realesrgan_ncnn/
+

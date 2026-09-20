@@ -1,89 +1,40 @@
 import os
-import re
 import json
-import cv2
-import numpy as np
-from google import genai
-from modules.codeformer_bridge import CodeFormerBridge
 from dotenv import load_dotenv
+
+from modules.codeformer_bridge import CodeFormerBridge
+from modules.image_preprocessor import ImagePreprocessor
+from modules.vision_module import VisionModule
+from modules.llm_client import LLMClient
+from modules.data_validator import DataValidator
 
 # Load environment variables
 load_dotenv()
 
 class OCREngine:
-    def __init__(self, model_name="gemini-1.5-flash"):
-        # The new SDK takes the API key directly in the Client constructor.
-        self.client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-        self.model_name = model_name
+    def __init__(self, model_name="gemini-3.6-flash"):
+        self.llm_client = LLMClient(model_name=model_name)
         self.codeformer = CodeFormerBridge(
             codeformer_dir=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "third_party", "CodeFormer")
         )
         
     def update_api_key(self, new_key):
         """Hot-swaps the Gemini API key into the client memory without requiring a restart."""
-        if new_key:
-            self.client = genai.Client(api_key=new_key)
+        self.llm_client.update_api_key(new_key)
         
-    def preprocess_image(self, image_path):
-        """
-        Uses OpenCV to preprocess the image and optionally extract bounding boxes.
-        For now, we will perform basic grayscale and contrast enhancement to help the LLM.
-        """
-        img = cv2.imread(image_path)
-        if img is None:
-            raise ValueError(f"Could not read image at {image_path}")
-            
-        # Convert to grayscale
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        
-        # Avoid brittle hardcoded adaptive thresholds which fail on flash photography.
-        # Instead, use robust min-max normalization to maximize contrast globally.
-        processed = cv2.normalize(gray, None, 0, 255, cv2.NORM_MINMAX)
-        
-        # Save temporary processed image for the LLM
-        temp_path = image_path.replace(".jpg", "_processed.jpg")
-        cv2.imwrite(temp_path, processed)
-        return temp_path
-
-    def _validate_license_plate(self, plate):
-        """Deterministic Guardrail for License Plates"""
-        if not plate:
-            return None
-        # Allow alphanumeric, hyphens, and spaces.
-        clean_plate = re.sub(r'[^A-Z0-9\-\s]', '', plate.upper()).strip()
-        # Widen the length constraint to avoid rejecting foreign/special plates
-        if len(clean_plate) >= 4 and len(clean_plate) <= 12:
-            return clean_plate
-        return "INVALID_FORMAT"
-
-    def _validate_date(self, date_str):
-        """Deterministic Guardrail for Dates (Robust parsing, India default DD-MM-YYYY)"""
-        if not date_str:
-            return None
-        
-        try:
-            from dateutil import parser
-            # dayfirst=True ensures ambiguous dates (like 10/11/2023) are treated as DD/MM/YYYY (India Standard)
-            parsed_date = parser.parse(date_str, fuzzy=True, dayfirst=True)
-            # Standardize output format
-            return parsed_date.strftime("%d-%m-%Y")
-        except Exception:
-            return "INVALID_FORMAT"
-
     def extract_entities(self, image_path, use_codeformer=False, return_image_path=False, llm_provider="gemini"):
         """
-        Main extraction pipeline (Kraken + SLM).
-        1. Preprocess Image (CodeFormer GAN)
-        2. Kraken OCR Extraction (Vision)
-        3. Local SLM Extraction (NLP Parsing)
-        4. Deterministic Guardrails
+        Main extraction pipeline orchestrator (Kraken + SLM).
+        1. Preprocess Image
+        2. LLM / SLM Extraction
+        3. Deterministic Guardrails
         """
+        # 1. Preprocess Image
         if use_codeformer:
             processed_img_path = self.codeformer.enhance_image(image_path)
         else:
-            processed_img_path = self.preprocess_image(image_path)
-        
-        # 2. LLM Extraction
+            processed_img_path = ImagePreprocessor.preprocess_image(image_path)
+            
         prompt = """
         You are a forensic OCR expert. Extract the following information from the provided police evidence image:
         - license_plate (string)
@@ -101,113 +52,24 @@ class OCREngine:
         }
         """
         
-        import tenacity
-        
-        @tenacity.retry(
-            stop=tenacity.stop_after_attempt(3),
-            wait=tenacity.wait_exponential(multiplier=1, min=2, max=10),
-            retry=tenacity.retry_if_exception_type(Exception),
-            reraise=True
-        )
-        def call_gemini():
-            # Upload to Gemini API using the new SDK
-            sample_file = self.client.files.upload(file=processed_img_path)
-            
-            # Generate content using the new SDK
-            # Set temperature=0.0 for deterministic, non-hallucinated extractions
-            response = self.client.models.generate_content(
-                model='gemini-1.5-flash',
-                contents=[sample_file, prompt],
-                config=genai.types.GenerateContentConfig(
-                    temperature=0.0
-                )
-            )
-            return response.text.strip()
-        
-        def run_easyocr(img_path):
-            import easyocr
-            print("\n[EASYOCR] Reading pixels...")
-            # We initialize EasyOCR in English mode
-            reader = easyocr.Reader(['en'], verbose=False)
-            # Detail=0 returns just a list of text strings
-            results = reader.readtext(img_path, detail=0)
-            return "\n".join(results)
-
-        def call_local_slm(raw_text):
-            import requests
-            print(f"\n[SLM PARSING] Feeding Kraken text to local Language Model...")
-            url = "http://localhost:11434/api/generate"
-            
-            # Check for PRO vs LITE weights in the folder
-            weights_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "weights")
-            pro_mode = any(f.endswith('.gguf') and os.path.getsize(os.path.join(weights_dir, f)) > 3 * 1024 * 1024 * 1024 for f in os.listdir(weights_dir)) if os.path.exists(weights_dir) else False
-            
-            slm_model = "llama3" if pro_mode else "llama3.2:1b"
-            
-            # Use XML Structured Tags for smaller edge models to prevent JSON corruption
-            xml_prompt = """
-            You are a forensic OCR expert. Extract the following information from the provided police evidence RAW OCR TEXT.
-            Do not write any conversational text. ONLY return the requested XML tags populated with the extracted data.
-            Format your output exactly like this:
-            <license_plate></license_plate>
-            <date></date>
-            <name></name>
-            <raw_text></raw_text> <!-- YOU MUST COPY THE ENTIRE RAW OCR TEXT HERE VERBATIM. DO NOT SUMMARIZE. DO NOT TRUNCATE. -->
-            """
-            
-            slm_prompt = xml_prompt + f"\n\n--- RAW OCR TEXT ---\n{raw_text}\n--- END RAW TEXT ---"
-            
-            payload = {
-                "model": slm_model,
-                "prompt": slm_prompt,
-                "stream": False,
-                "options": {
-                    "temperature": 0.0,
-                    "num_predict": 500,
-                    "repeat_penalty": 1.1
-                }
-            }
-            response = requests.post(url, json=payload, timeout=120)
-            if response.status_code != 200:
-                raise Exception(f"SLM Server returned {response.status_code}: {response.text}")
-            return response.json().get("response", "").strip()
-            
+        # 2. Extract Data
+        extracted_data = {}
         try:
             if llm_provider == "gemini":
-                response_text = call_gemini()
-                
-                # Cloud Mode Parse: Clean up JSON if necessary
-                import re
-                json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
-                if json_match:
-                    response_text = json_match.group(0)
-                extracted_data = json.loads(response_text.strip())
-                
+                extracted_data = self.llm_client.call_gemini(processed_img_path, prompt)
             else:
-                # Offline Edge Mode
-                # Step 1: EasyOCR extracts text
-                ocr_text = run_easyocr(processed_img_path)
+                ocr_text = VisionModule.run_easyocr(processed_img_path)
+                weights_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "weights")
+                extracted_data = self.llm_client.call_local_slm(ocr_text, weights_dir)
                 
-                # Step 2: SLM parses into XML Tags
-                response_text = call_local_slm(ocr_text)
-                
-                # Edge Mode Parse: Extract XML Tags via Regex
-                import re
-                extracted_data = {}
-                plate_match = re.search(r'<license_plate>(.*?)</license_plate>', response_text, re.IGNORECASE | re.DOTALL)
-                date_match = re.search(r'<date>(.*?)</date>', response_text, re.IGNORECASE | re.DOTALL)
-                name_match = re.search(r'<name>(.*?)</name>', response_text, re.IGNORECASE | re.DOTALL)
-                raw_match = re.search(r'<raw_text>(.*?)</raw_text>', response_text, re.IGNORECASE | re.DOTALL)
-                
-                extracted_data['license_plate'] = plate_match.group(1).strip() if plate_match else ""
-                extracted_data['date'] = date_match.group(1).strip() if date_match else ""
-                extracted_data['name'] = name_match.group(1).strip() if name_match else ""
-                extracted_data['raw_text'] = raw_match.group(1).strip() if raw_match else ""
-
-            
         except Exception as e:
-            print(f"Extraction failed: {e}")
-            extracted_data = {}
+            # PII Security: We log the generic failure, but we MUST raise the actual exception 
+            # so the FastAPI backend knows the API call failed (e.g., Invalid API Key) 
+            # instead of silently returning empty data and hanging the UI with retries.
+            print(f"Extraction failed: {str(e)}")
+            if os.path.exists(processed_img_path) and not return_image_path:
+                os.remove(processed_img_path)
+            raise RuntimeError(f"OCR Engine Failure: {str(e)}")
             
         # Clean up temporary processed image ONLY if we aren't returning it to the UI
         if not return_image_path and os.path.exists(processed_img_path):
@@ -215,10 +77,10 @@ class OCREngine:
             
         # 3. Deterministic Guardrails
         if 'license_plate' in extracted_data:
-            extracted_data['license_plate'] = self._validate_license_plate(extracted_data['license_plate'])
+            extracted_data['license_plate'] = DataValidator.validate_license_plate(extracted_data['license_plate'])
             
         if 'date' in extracted_data:
-            extracted_data['date'] = self._validate_date(extracted_data['date'])
+            extracted_data['date'] = DataValidator.validate_date(extracted_data['date'])
             
         # Ensure base structure is present
         final_dict = {
