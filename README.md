@@ -6,81 +6,178 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Framework: PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=flat&logo=PyTorch&logoColor=white)](https://pytorch.org/)
 [![Frontend: React + Vite](https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61DAFB.svg)](frontend/)
+[![Backend: FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg)](src/api.py)
 
+**PoliceForensicsAI** is an enterprise-grade forensic evidence extraction and super-resolution system engineered for law enforcement precincts and air-gapped forensic laboratories. The platform pairs deep-learning generative restoration (CodeFormer GAN) with a custom fine-tuned Small Language Model (SLM) based on **Llama 3 8B** quantized to 4-bit GGUF, enforcing strict deterministic guardrails to prevent AI hallucinations.
 
-Welcome to the **Police Forensics AI** project, an advanced secure evidence extraction system designed for law enforcement precincts. This tool leverages cutting-edge Deep Learning GANs (CodeFormer/RealESRGAN) to computationaly restore blurry dashboard camera and surveillance evidence, and state-of-the-art Vision-Language Models (Google Gemini & Llama 3) to strictly extract deterministic data.
+> **Law Enforcement Validation:** Developed and audited for operational law enforcement workflows, this platform was presented and demonstrated in an official training programme for **150+ Rajasthan Police personnel** under the guidance of Dr. Gyan Singh (HoD, CSE) and Mr. Abdul Javed at the Indian Institute of Information Technology (IIIT) Kota.
 
-## Features
-- **Dual-Tier Image Preprocessing (Licensing Strategy):** 
-  - **OpenCV Pipeline (Default - Commercial MIT):** Utilizes dynamic contrast normalization and mathematical edge-detection to prepare evidence for OCR. This path is 100% MIT-licensed and safe for commercial enterprise deployment.
-  - **CodeFormer GAN (Opt-In - Research S-Lab):** For heavily degraded images, users can toggle the Deep Learning PyTorch bridge. This runs CodeFormer + Real-ESRGAN to computationally restore human faces and background text. *Note: This path invokes an S-Lab Non-Commercial license and requires strict legal compliance.*
-- **Pluggable LLM Architecture:** 
-  - **Gemini Cloud (Default):** Lightning-fast structured extraction using Google's Gemini Flash.
-  - **Dynamic Offline Edge Mode:** 100% air-gapped extraction using local `.gguf` Small Language Models (SLMs). Booting natively defaults to **LITE MODE** (TinyLlama 1B). Automatically detects large weight files to unlock **PRO MODE** (Llama 8B).
-- **Deterministic Guardrails:** Implements strict regex, fuzzy date parsing, and Word Error Rate (WER) evaluations to completely eliminate AI hallucinations.
-- **Exporting Capabilities:** Seamlessly exports extracted JSON data into flat CSV and Excel reports for precinct archives.
+---
 
-## System Architecture (MLOps & Zero-Trust)
+## ⚡ Key Capabilities
 
-This project is built using enterprise MLOps patterns, specifically focusing on **Dynamic Licensing Routing** (separating commercial math from non-commercial GANs) and **Zero-Trust Edge-to-Cloud fallback**.
+* **Dual-Tier Image Preprocessing (Licensing Isolation):**
+  * **OpenCV Mathematical Filter (Default - Commercial MIT):** Dynamic contrast normalization, morphological sharpening, and edge enhancement. 100% MIT-licensed and safe for unencumbered commercial enterprise deployment.
+  * **CodeFormer GAN Bridge (Opt-In - Research S-Lab):** For severe facial degradation and degraded license plate crops, users can toggle the PyTorch GAN super-resolution bridge to synthesize lost high-frequency details.
+* **Pluggable Edge-to-Cloud SLM/LLM Engine:**
+  * **Offline Air-Gapped Mode (Primary):** Runs a custom fine-tuned **Llama 3 8B** model quantized to `Q4_K_M` GGUF (4.92 GB) via `llama-cpp-python`. Engineered with strict 8GB laptop RAM constraints (`n_ctx=256`, `n_batch=8`, `n_threads=2`, `use_mmap=True`) for edge deployment on standard precinct laptops.
+  * **Gemini Cloud Mode (Fallback):** Google Gemini Flash integration with exponential backoff (`tenacity`) for high-throughput cloud batch processing.
+* **Cryptographic Chain-of-Custody (SHA-256):** Computes an immutable SHA-256 cryptographic digest upon image upload to guarantee evidentiary integrity against digital tampering in legal proceedings.
+* **Deterministic Guardrails & Abstention Logic:** SpaCy/Regex pattern matching, Levenshtein distance string verification, and strict schema validation completely eliminate generative hallucinations (100% zero-hallucination rate on non-vehicle records).
+* **Decoupled Modern Architecture:** Decoupled FastAPI REST backend (`src/api.py`) paired with a modern React + Vite + TailwindCSS Cyber Command Dashboard (`frontend/`) featuring Framer Motion telemetry animations. Retains legacy Gradio interface (`src/app_legacy.py`) for single-script offline deployments.
+
+---
+
+## 🏗️ System Architecture
 
 ```mermaid
-graph TD
-    A[Officer Uploads Evidence] --> B{Deep Learning Toggle}
+flowchart TD
+    A["Officer Uploads Evidence Photo"] --> B["SHA-256 Cryptographic Hash<br/>(Courtroom Chain-of-Custody Stamp)"]
     
-    %% Dual Licensing Routing
-    B -->|Disabled Default| C["OpenCV Pipeline<br/>MIT Licensed / Commercial Safe"]
-    B -->|Enabled Opt-In| D["CodeFormer + RealESRGAN<br/>S-Lab License / Research Only"]
+    B --> C{"Enhancement Selector"}
+    C -->|Default / Commercial MIT| D["OpenCV Mathematical Filters<br/>(Contrast & Morphology)"]
+    C -->|Opt-In / Severe Blur| E["CodeFormer GAN Super-Resolution<br/>(S-Lab PyTorch Bridge)"]
     
-    C --> E{Zero-Trust LLM Router}
-    D --> E
+    D --> F["EasyOCR Deep Learning Engine<br/>(CRNN + LSTM Tokenizer)"]
+    E --> F
     
-    %% LLM Routing
-    E -->|Cloud Speed| F["Google Gemini 1.5 Flash<br/>Cloud API"]
-    E -->|Air-Gapped Security| G["Local .gguf SLM<br/>LITE Mode or PRO Mode"]
+    F --> G{"Pluggable LLM/SLM Router"}
+    G -->|Offline Air-Gapped| H["Fine-Tuned Llama 3 8B (Q4_K_M GGUF)<br/>llama-cpp-python in 8GB RAM"]
+    G -->|Cloud Speed| I["Google Gemini 1.5 Flash<br/>Cloud REST API"]
     
-    %% Guardrails
-    F --> H["Deterministic Guardrails<br/>Regex & Date Parsing"]
-    G --> H
+    H --> J["Deterministic Guardrails & Regex<br/>(Date Normalizer & Plate Syntax Checker)"]
+    I --> J
     
-    H --> I[Verified JSON Payload]
-    I --> J["CSV / Excel / Database Export"]
+    J --> K["Verified Forensic JSON Payload<br/>(license_plate, date, suspect_name, raw_text)"]
+    K --> L["Courtroom Export<br/>(CSV, Excel, Database Dispatch)"]
 ```
 
-## Installation & Setup
+---
 
-### 1. Developer Setup (Python Environment)
-1. Clone the repository: `git clone https://github.com/GorangSinghal/PoliceForensicsAI.git`
-2. Create a virtual environment: `python -m venv venv`
-3. Activate the environment: `.\venv\Scripts\Activate` (Windows) or `source venv/bin/activate` (Mac/Linux)
-4. Install dependencies: `pip install -r requirements.txt`
-5. Copy `.env.example` to `.env` and insert your Gemini API Key.
-6. Run the application: `python src/app.py`
+## 📊 Empirical Benchmarks & Evaluation Reports
 
-### 2. Standalone Windows Desktop App
-For non-technical officers, you can download the standalone `.exe` folder.
-1. Run `.\scripts\build_executable.ps1` to compile the application using PyInstaller.
-2. Distribute the generated `dist/CyberTerminal/` folder to precinct laptops. No Python installation required!
+The fine-tuned SLM and multimodal vision pipeline were rigorously audited on Google Colab (NVIDIA T4 GPU) across a 100-case Golden Matrix:
 
-### 3. Docker Deployment
-For IT infrastructure deployment:
-1. Build the image: `docker build -t police-forensics-ai .`
-2. Run the container: `docker run -p 7860:7860 police-forensics-ai`
+| Benchmark Run | Evaluation Modality | Primary Metric | Zero-Hallucination Rate | Latency | Report Link |
+| :--- | :--- | :---: | :---: | :---: | :--- |
+| **Colab 1: Reasoning Layer** | Raw OCR Tokens $\rightarrow$ Llama 3 8B | **98.0%** (49/50 Plates) | **100.0%** (50/50 Receipts) | 1.42s | [`evaluation_report_colab1.md`](reports/evaluation_report_colab1.md) |
+| **Colab 2: Physical Images** | Synthetic Physical JPEGs $\rightarrow$ OCR $\rightarrow$ Llama 3 | **30.0%** (Unassisted OCR) | **100.0%** (50/50 Receipts) | 1.80s | [`end_to_end_image_benchmark_colab2.md`](reports/end_to_end_image_benchmark_colab2.md) |
+| **Colab 3: Curated 100-Case Matrix** | Adverse Weather / CCTV JPEGs $\rightarrow$ OCR $\rightarrow$ Llama 3 | **59.0%** (Adverse Baseline) | **100.0%** (Strict JSON Schema) | 1.97s | [`official_curated_100_case_report_colab3.md`](reports/official_curated_100_case_report_colab3.md) |
 
-## 🚀 How to Upgrade to PRO Mode (Offline)
-This application uses a dynamic "Drop-In" architecture for offline inference. It requires no complex installations.
+> **Key Architectural Takeaway:** While the fine-tuned Llama 3 8B achieves **98% extraction accuracy** when supplied clean character tokens, extreme real-world optical noise (mud splatter, cursive handwriting, night glare) drops unassisted optical OCR to 59%. This empirically justifies the upstream **CodeFormer GAN Super-Resolution layer** before OCR tokenization.
 
-1. **LITE MODE (Default):** Out of the box, the system uses a bundled TinyLlama 1B model, which runs on basic precinct laptops.
-2. **PRO MODE (Llama 8B):** If your hardware can support an 8-Billion parameter model, you can instantly unlock PRO mode:
-    * Download a standard `llama-3-8b.gguf` file (or any `.gguf` larger than 3GB) from Hugging Face.
-    * Drag and drop the `.gguf` file directly into the `weights/` folder.
-    * Restart the application. The UI will automatically detect the massive file and display the **⚡ PRO MODE** badge!
+---
 
-## Project Architecture
-- `src/app.py`: The Gradio User Interface.
-- `src/ocr_engine.py`: The orchestration layer managing LLMs and Guardrails.
-- `src/modules/codeformer_bridge.py`: The PyTorch bridge interfacing with the GAN.
-- `tests/test_evaluation.py`: The rigorous unit testing suite evaluating WER and Entity Accuracy against the 100-case Golden Matrix.
+## 🚀 Quick Start Guide
 
-## License
-This project is released under the permissive [MIT License](LICENSE).
+### 1. Clone & Environment Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/GorangSinghal/PoliceForensicsAI.git
+cd PoliceForensicsAI
+
+# Create and activate Python virtual environment
+python -m venv venv
+# Windows:
+.\venv\Scripts\Activate
+# Linux / macOS:
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### 2. Download the Fine-Tuned Model Weights
+
+Download the official 4-bit quantized GGUF model directly from Hugging Face:
+
+```bash
+python scripts/download_weights.py
+```
+*Model Repository:* [`huggingface.co/GorangSinghal/PoliceForensics_Llama3_8B`](https://huggingface.co/GorangSinghal/PoliceForensics_Llama3_8B) (`llama-3-8b-instruct.Q4_K_M.gguf`, 4.92 GB).
+
+### 3. Launch the Application
+
+#### Option A: Modern React + FastAPI Dashboard (Recommended)
+
+Terminal 1 (Backend API):
+```bash
+uvicorn src.api:app --reload --port 8000
+```
+
+Terminal 2 (Frontend Dashboard):
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Open [`http://localhost:5173`](http://localhost:5173) in your browser to access the Cyber Command Terminal.
+
+#### Option B: Standalone Gradio Interface (Offline / Air-Gapped Fallback)
+
+```bash
+python src/app_legacy.py
+```
+Open [`http://localhost:7860`](http://localhost:7860) for direct single-script operation.
+
+---
+
+## 🧪 Testing & Continuous Integration (CI/CD)
+
+The project includes an enterprise CI/CD pipeline running on GitHub Actions on every push and pull request:
+
+```bash
+# Run the 100-case deterministic guardrail test suite
+python -m pytest tests/ -v
+
+# Run AST security vulnerability audit
+bandit -r src/ -c bandit.yaml
+```
+
+* **Automated Test Suite:** [`tests/test_evaluation.py`](tests/test_evaluation.py) validates Word Error Rate (WER) and entity extraction precision across 100 golden samples.
+* **Security Scanner:** [`bandit.yaml`](bandit.yaml) audits against hardcoded credentials, shell injections, and insecure deserialization.
+* **CI Workflow Definition:** [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+
+---
+
+## 📁 Repository Structure
+
+```text
+PoliceForensicsAI/
+├── .github/workflows/ci.yml    # Enterprise CI/CD workflow (PyTest + Bandit)
+├── frontend/                   # Modern React 19 + Vite + TailwindCSS dashboard
+│   ├── src/App.jsx             # Cyber command telemetry interface
+│   └── package.json            # Node.js dependencies
+├── src/                        # Core Python backend micro-modules
+│   ├── api.py                  # FastAPI REST endpoints (/analyze, /export, /health)
+│   ├── ocr_engine.py           # Orchestrator (Facade Pattern)
+│   ├── app_legacy.py           # Gradio fallback interface
+│   └── modules/                # Decoupled SOLID components
+│       ├── image_preprocessor.py # OpenCV contrast & morphology
+│       ├── vision_module.py    # EasyOCR integration with local weight isolation
+│       ├── llm_client.py       # Gemini SDK + Local Llama 3 8B GGUF runtime
+│       ├── data_validator.py   # Deterministic Regex & date parsing guardrails
+│       └── codeformer_bridge.py# PyTorch GAN super-resolution bridge
+├── reports/                    # Empirical benchmark evaluation audits
+│   ├── evaluation_report_colab1.md
+│   ├── end_to_end_image_benchmark_colab2.md
+│   └── official_curated_100_case_report_colab3.md
+├── scripts/                    # Automation & MLOps utilities
+│   ├── build_dataset.py        # 2,000-sample hybrid dataset builder
+│   ├── download_weights.py     # Automated Hugging Face model pull
+│   └── colab_step2_5_evaluation.py # Colab T4 evaluation script
+├── golden/data/                # Curated 100-case high-resolution evaluation matrix
+├── docs/                       # Architectural documentation & task checklists
+│   ├── task.md                 # Project implementation roadmap
+│   └── annexure.md             # Comprehensive technical knowledge base
+├── bandit.yaml                 # Static AST security scanner configuration
+└── requirements.txt            # Python dependencies
+```
+
+---
+
+## 📜 License
+
+This project is open-source under the permissive [MIT License](LICENSE).  
+*Notice on Third-Party Weights:* S-Lab CodeFormer weights are subject to their respective non-commercial research licensing terms. When operating in commercial production, use the default OpenCV mathematical processing tier.
