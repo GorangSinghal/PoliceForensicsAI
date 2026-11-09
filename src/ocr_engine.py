@@ -2,11 +2,18 @@ import os
 import json
 from dotenv import load_dotenv
 
-from modules.codeformer_bridge import CodeFormerBridge
-from modules.image_preprocessor import ImagePreprocessor
-from modules.vision_module import VisionModule
-from modules.llm_client import LLMClient
-from modules.data_validator import DataValidator
+try:
+    from modules.codeformer_bridge import CodeFormerBridge
+    from modules.image_preprocessor import ImagePreprocessor
+    from modules.vision_module import VisionModule
+    from modules.llm_client import LLMClient
+    from modules.data_validator import DataValidator
+except ImportError:
+    from src.modules.codeformer_bridge import CodeFormerBridge
+    from src.modules.image_preprocessor import ImagePreprocessor
+    from src.modules.vision_module import VisionModule
+    from src.modules.llm_client import LLMClient
+    from src.modules.data_validator import DataValidator
 
 # Load environment variables
 load_dotenv()

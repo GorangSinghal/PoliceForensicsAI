@@ -30,7 +30,8 @@ jobs:
 
     - name: Run Deterministic Guardrail Tests
       env:
-        PYTHONPATH: .
+        PYTHONPATH: src;.
+        GEMINI_API_KEY: "mock-key-for-ci-tests"
       run: |
         python -m pytest tests/ -v
 

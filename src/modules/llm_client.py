@@ -12,13 +12,23 @@ except ImportError:
 class LLMClient:
     def __init__(self, model_name="gemini-3.6-flash"):
         self.model_name = model_name
-        self.client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+        api_key = os.getenv("GEMINI_API_KEY")
+        if api_key:
+            try:
+                self.client = genai.Client(api_key=api_key)
+            except Exception:
+                self.client = None
+        else:
+            self.client = None
         self.local_llm = None
 
     def update_api_key(self, new_key):
         """Hot-swaps the Gemini API key into the client memory without requiring a restart."""
         if new_key:
-            self.client = genai.Client(api_key=new_key)
+            try:
+                self.client = genai.Client(api_key=new_key)
+            except Exception:
+                self.client = None
 
     @tenacity.retry(
         stop=tenacity.stop_after_attempt(3),
@@ -27,6 +37,8 @@ class LLMClient:
         reraise=True
     )
     def call_gemini(self, processed_img_path, prompt):
+        if not self.client:
+            raise ValueError("GEMINI_API_KEY is not configured. Please set the environment variable or use offline mode.")
         # Upload to Gemini API using the new SDK
         sample_file = self.client.files.upload(file=processed_img_path)
         
