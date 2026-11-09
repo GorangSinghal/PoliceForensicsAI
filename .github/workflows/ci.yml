@@ -14,6 +14,8 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
+      with:
+        submodules: false
 
     - name: Set up Python 3.10
       uses: actions/setup-python@v5
@@ -27,8 +29,10 @@ jobs:
         pip install fastapi uvicorn python-multipart pytest pytest-cov pandas opencv-python torch torchvision pydantic python-dotenv gradio httpx easyocr jiwer python-dateutil google-genai tenacity bandit
 
     - name: Run Deterministic Guardrail Tests
+      env:
+        PYTHONPATH: .
       run: |
-        pytest tests/ -v --cov=src
+        python -m pytest tests/ -v
 
     - name: Security Audit (Bandit)
       run: |
