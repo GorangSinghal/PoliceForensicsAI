@@ -1,9 +1,12 @@
 # Police Forensics AI: Cyber Command Terminal 🚓
 
+[![CI/CD Pipeline](https://github.com/GorangSinghal/PoliceForensicsAI/actions/workflows/ci.yml/badge.svg)](https://github.com/GorangSinghal/PoliceForensicsAI/actions/workflows/ci.yml)
+[![Hugging Face Model](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-PoliceForensics__Llama3__8B-blue)](https://huggingface.co/GorangSinghal/PoliceForensics_Llama3_8B)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Framework: PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=flat&logo=PyTorch&logoColor=white)](https://pytorch.org/)
-[![UI: Gradio](https://img.shields.io/badge/UI-Gradio-orange)](https://gradio.app/)
+[![Frontend: React + Vite](https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61DAFB.svg)](frontend/)
+
 
 Welcome to the **Police Forensics AI** project, an advanced secure evidence extraction system designed for law enforcement precincts. This tool leverages cutting-edge Deep Learning GANs (CodeFormer/RealESRGAN) to computationaly restore blurry dashboard camera and surveillance evidence, and state-of-the-art Vision-Language Models (Google Gemini & Llama 3) to strictly extract deterministic data.
 
@@ -47,7 +50,7 @@ graph TD
 ## Installation & Setup
 
 ### 1. Developer Setup (Python Environment)
-1. Clone the repository: `git clone https://github.com/your-username/PoliceForensicsAI.git`
+1. Clone the repository: `git clone https://github.com/GorangSinghal/PoliceForensicsAI.git`
 2. Create a virtual environment: `python -m venv venv`
 3. Activate the environment: `.\venv\Scripts\Activate` (Windows) or `source venv/bin/activate` (Mac/Linux)
 4. Install dependencies: `pip install -r requirements.txt`
