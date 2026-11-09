@@ -44,14 +44,14 @@
     - `[x]` Re-run the 100-Case Evaluation Suite purely offline to certify Air-Gapped accuracy.
     - `[x]` Build a dynamic Hardware Badge in the UI that auto-unlocks PRO Mode when 8B `.gguf` weights are detected.
 
-- `[ ]` **Phase 6.5: ECLIPSE-Tier UI Upgrade (React + FastAPI)**
-    - `[ ]` Migrate backend to a decoupled FastAPI REST architecture (`src/api.py`).
-    - `[ ]` Initialize a Vite + React + TailwindCSS frontend (`frontend/`).
-    - `[ ]` Build a premium, cinematic Cyber Command Dashboard with Framer Motion animations.
-    - `[ ]` Retain existing Gradio interface as `src/app_legacy.py` for fallback offline deployments.
+- `[x]` **Phase 6.5: NEXT-Tier UI Upgrade (React + FastAPI)**
+    - `[x]` Migrate backend to a decoupled FastAPI REST architecture (`src/api.py`).
+    - `[x]` Initialize a Vite + React + TailwindCSS frontend (`frontend/`).
+    - `[x]` Build a premium, cinematic Cyber Command Dashboard with Framer Motion animations.
+    - `[x]` Retain existing Gradio interface as `src/app_legacy.py` for fallback offline deployments.
 
-- `[ ]` **Phase 6.6: Forensic Explainable AI (XAI) / AEGIS**
-    - `[ ]` **Cryptographic Hashing (SHA-256):** Generate an unbreakable mathematical hash of the raw image upon upload to guarantee chain-of-custody and prevent digital tampering.
+- `[/]` **Phase 6.6: Forensic Explainable AI (XAI) / AEGIS**
+    - `[x]` **Cryptographic Hashing (SHA-256):** Generate an unbreakable mathematical hash of the raw image upon upload to guarantee chain-of-custody and prevent digital tampering.
     - `[ ]` Implement "Difference Heatmaps" to visually highlight exact pixels altered by the CodeFormer GAN.
     - `[ ]` **Counter-Factual Visualizations:** Visually demonstrate why the AI rejected alternative extractions (e.g., showing the pixel distance between an '8' and a 'B') to preempt defense attorney arguments.
     - `[ ]` Expose Multi-Metric Confidence Scoring:
@@ -85,24 +85,33 @@
     - `[x]` **Fix PII Logging Loophole:** Audit `src/ocr_engine.py` and replace all raw `print(e)` exceptions with sanitized, generic error loggers to ensure zero PII leakage on crash.
     - `[ ]` **Documentation (Post-Phase 11):** Write a FAANG-level `README.md` and `DEPLOYMENT.md` detailing the new LoRA architecture.
     - `[ ]` **Fix Over-Fitting Loophole:** Siphon 100 actual, physical Out-Of-Distribution (OOD) degraded images into `golden/data/` to replace the synthetic evaluation script.
+    - `[ ]` **RBAC & Anti-Jailbreak Guardrails:** Build an interception module that blocks prompt injection attempts and restricts data access based on user hierarchy (e.g., preventing a Hawaldar from querying Detective-level evidence).
     - `[x]` **Refactor God Class (Weekend Task):** Refactor `src/ocr_engine.py` using the Single Responsibility Principle to decouple it into 5 distinct modules: `vision_module.py`, `llm_client.py`, `data_validator.py`, `image_preprocessor.py`, and the main `ocr_controller.py`.
 
 - `[ ]` **Phase 10: FAANG / GSoC Mock Interview**
     - `[ ]` Type `/grill-me` in the chat to initiate a brutal Mock Interview covering the architectural decisions of PoliceForensicsAI.
 
-- `[ ]` **Phase 11: Custom Model Fine-Tuning (LoRA) & Enterprise Deployment**
-    - `[ ]` **Step 1 - Dataset Engineering (The 2,000 Hybrid):** Write a Python script to automatically construct a `dataset.jsonl` file by merging:
-        - `[ ]` 1,000 JSON documents from Kaggle's SROIE (Teaches JSON structural discipline)
-        - `[ ]` 500 global plates from Hugging Face `sonnetechnology` (Teaches extreme rain/night/blur resilience)
-        - `[ ]` 500 regional plates from Hugging Face `Dataclusterlabspvtltd` (Teaches Indian state codes and syntax)
-    - `[ ]` **Step 2 - LoRA Fine-Tuning:** Use Google Colab to train a LoRA/QLoRA adapter on a `Llama 3 8B` model using your `dataset.jsonl` file, exporting it as a Q4_K_M `.gguf` file.
-    - `[ ]` **Step 3 - Optimized Runtime:** Refactor `src/ocr_engine.py` to completely replace Ollama with `llama-cpp-python`, strictly limiting RAM usage so the 8B model fits safely inside 8GB laptops.
-    - `[ ]` **Step 4 - Plug & Play Auto-Downloader:** Write an `__init__.py` script that automatically downloads the 4.5GB `.gguf` file into the `weights/` folder upon first boot.
-    - `[ ]` **Step 5 - Setup CI/CD Pipeline:** Create a GitHub Actions `.yml` file to automatically run the PyTest Integration Suite against the new LoRA model on every commit.
+- `[/]` **Phase 11: Custom Model Fine-Tuning (LoRA) & Enterprise Deployment**
+    - `[/]` **Step 1 - Dataset Engineering (The 2,000 Hybrid):** Write a Python script to automatically construct a `dataset.jsonl` file by merging:
+        - `[x]` 1,000 JSON documents from Kaggle's SROIE (Teaches JSON structural discipline)
+        - `[x]` 500 Indian plates from Kaggle `phuoctn` (Teaches Indian state codes and syntax)
+        - `[x]` 500 Augmented Indian plates via OpenCV (Teaches extreme rain/night/blur resilience natively)
+        - `[ ]` **The Real-World ETL Pipeline:** Write a Python scraper to extract unstructured criminal court records from IndianKanoon, clean the HTML with BeautifulSoup, and inject it into the dataset (Proves Data Engineering skills for Viva).
+    - `[x]` **Step 2 - LoRA Fine-Tuning:** Use Google Colab to train a LoRA/QLoRA adapter on a `Llama 3 8B` model using your `dataset.jsonl` file, exporting it as a Q4_K_M `.gguf` file.
+    - `[x]` **Step 2.5 - Human-in-the-Loop Evaluation (Qualitative Testing):** Validate the `.gguf` model before production deployment:
+        - `[x]` The Unseen Data Test (98.0% accuracy on 50 unseen plate formats)
+        - `[x]` The English Test (100.0% strict JSON schema compliance)
+        - `[x]` The 50/50 Task Test (100.0% zero-hallucination rate on receipts vs plates)
+    - `[x]` **Step 3 - Optimized Runtime:** Refactor `src/ocr_engine.py` to completely replace Ollama with `llama-cpp-python`, strictly limiting RAM usage so the 8B model fits safely inside 8GB laptops.
+    - `[x]` **Step 4 - Plug & Play Auto-Downloader:** Write an `__init__.py` script that automatically downloads the 4.5GB `.gguf` file into the `weights/` folder upon first boot.
+    - `[x]` **Step 5 - Setup CI/CD Pipeline:** Create a GitHub Actions `.yml` file to automatically run the PyTest Integration Suite against the new LoRA model on every commit.
 
-- `[ ]` **Phase 11.11: RAG-Based Digital Case Files (Difficulty: Low/Medium)**
-    - `[ ]` Implement a "Chat with the Evidence" feature using LangChain and a Vector Database (like ChromaDB).
-    - `[ ]` Allow officers to query restored evidence naturally (e.g., "Show me every blurry blue sedan caught on dashcam near 5th Street last week").
+- `[ ]` **Phase 11.11: Enterprise FAANG-Level RAG (Scheduled for Thursday) (Difficulty: Hard)**
+    - `[ ]` **Step 1 (The Foundation) - Basic Vector Search:** Convert extracted JSON evidence into vector embeddings using a lightweight model (`all-MiniLM-L6-v2`) and store them in a local Vector Database (ChromaDB or FAISS). Set up the baseline Cosine Similarity search to feed evidence into the Llama 3 prompt.
+    - `[ ]` **Step 2 - Hybrid Search:** Combine the foundational Vector Search (semantic meaning) with BM25 Keyword Search (exact plate/name matching) to prevent the AI from confusing similar data.
+    - `[ ]` **Step 3 - Cross-Encoder Re-Ranking:** Mathematically re-rank the search results using a secondary neural network for 100% precision before feeding the context to the LLM.
+    - `[ ]` **Step 4 - Metadata Pre-Filtering:** Tag vector embeddings with Date/Location/Crime ID to create hard database walls, physically preventing the AI from hallucinating evidence across different cases.
+    - `[ ]` **Step 5 - Graph RAG / Entity Linking:** Map connections between evidence (e.g., mathematically linking a suspect's parking receipt to a vehicle plate found at a crime scene).
 
 - `[ ]` **Phase 11.22: Adversarial Deepfake Detection (Difficulty: Medium)**
     - `[ ]` Integrate an open-source Deepfake detection model as an Anti-Tamper routing layer.

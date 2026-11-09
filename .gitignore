@@ -21,6 +21,16 @@ weights/
 *.pth
 *.pt
 *.ckpt
+*.gguf
+
+# Raw Datasets & Zip Archives (Hosted on Kaggle/HuggingFace)
+data/
+*.zip
+
+# Word Documents & Personal Drafts
+*.doc
+*.docx
+
 
 # Temporary/OS Files
 .DS_Store
