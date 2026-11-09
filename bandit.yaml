@@ -1,0 +1,2 @@
+### Bandit configuration for PoliceForensicsAI
+skips: ['B101']
