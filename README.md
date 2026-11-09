@@ -23,7 +23,7 @@
   * **Offline Air-Gapped Mode (Primary):** Runs a custom fine-tuned **Llama 3 8B** model quantized to `Q4_K_M` GGUF (4.92 GB) via `llama-cpp-python`. Engineered with strict 8GB laptop RAM constraints (`n_ctx=256`, `n_batch=8`, `n_threads=2`, `use_mmap=True`) for edge deployment on standard precinct laptops.
   * **Gemini Cloud Mode (Fallback):** Google Gemini Flash integration with exponential backoff (`tenacity`) for high-throughput cloud batch processing.
 * **Cryptographic Chain-of-Custody (SHA-256):** Computes an immutable SHA-256 cryptographic digest upon image upload to guarantee evidentiary integrity against digital tampering in legal proceedings.
-* **Deterministic Guardrails & Abstention Logic:** SpaCy/Regex pattern matching, Levenshtein distance string verification, and strict schema validation completely eliminate generative hallucinations (100% zero-hallucination rate on non-vehicle records).
+* **Deterministic Guardrails & Abstention Logic:** Enforces SpaCy/Regex pattern matching, fuzzy date normalization, and strict schema validation, achieving 49/50 plate matches and 0 false plate numbers on 50 non-vehicle financial receipts.
 * **Decoupled Modern Architecture:** Decoupled FastAPI REST backend (`src/api.py`) paired with a modern React + Vite + TailwindCSS Cyber Command Dashboard (`frontend/`) featuring Framer Motion telemetry animations. Retains legacy Gradio interface (`src/app_legacy.py`) for single-script offline deployments.
 
 ---
@@ -58,13 +58,21 @@ flowchart TD
 
 The fine-tuned SLM and multimodal vision pipeline were rigorously audited on Google Colab (NVIDIA T4 GPU) across a 100-case Golden Matrix:
 
-| Benchmark Run | Evaluation Modality | Primary Metric | Zero-Hallucination Rate | Latency | Report Link |
-| :--- | :--- | :---: | :---: | :---: | :--- |
-| **Colab 1: Reasoning Layer** | Raw OCR Tokens $\rightarrow$ Llama 3 8B | **98.0%** (49/50 Plates) | **100.0%** (50/50 Receipts) | 1.42s | [`evaluation_report_colab1.md`](reports/evaluation_report_colab1.md) |
-| **Colab 2: Physical Images** | Synthetic Physical JPEGs $\rightarrow$ OCR $\rightarrow$ Llama 3 | **30.0%** (Unassisted OCR) | **100.0%** (50/50 Receipts) | 1.80s | [`end_to_end_image_benchmark_colab2.md`](reports/end_to_end_image_benchmark_colab2.md) |
-| **Colab 3: Curated 100-Case Matrix** | Adverse Weather / CCTV JPEGs $\rightarrow$ OCR $\rightarrow$ Llama 3 | **59.0%** (Adverse Baseline) | **100.0%** (Strict JSON Schema) | 1.97s | [`official_curated_100_case_report_colab3.md`](reports/official_curated_100_case_report_colab3.md) |
+| Benchmark Run | Pipeline Evaluated | Plate Match Accuracy | Receipt Zero-Hallucination | Strict JSON Validity | Average Latency | Audit Report |
+| :--- | :--- | :---: | :---: | :---: | :---: | :--- |
+| **Colab 1: OCR Text** | Raw OCR Tokens $\rightarrow$ Llama 3 8B | **98.0%** (49/50) | **100.0%** (50/50, 0 false plates) | **100.0%** (100/100) | 1.42s | [`evaluation_report_colab1.md`](reports/evaluation_report_colab1.md) |
+| **Colab 2: Physical Images** | Synthetic JPEGs $\rightarrow$ EasyOCR + Llama 3 | **30.0%** (15/50) | **100.0%** (50/50, 0 false plates) | **100.0%** (100/100) | 1.80s | [`end_to_end_image_benchmark_colab2.md`](reports/end_to_end_image_benchmark_colab2.md) |
+| **Colab 3: Degraded Images** | Adverse JPEGs $\rightarrow$ EasyOCR + Llama 3 | **20.0%** (20/100 Exact)* | *N/A (All vehicle records)* | **100.0%** (100/100) | 1.97s | [`official_curated_100_case_report_colab3.md`](reports/official_curated_100_case_report_colab3.md) |
 
-> **Key Architectural Takeaway:** While the fine-tuned Llama 3 8B achieves **98% extraction accuracy** when supplied clean character tokens, extreme real-world optical noise (mud splatter, cursive handwriting, night glare) drops unassisted optical OCR to 59%. This empirically justifies the upstream **CodeFormer GAN Super-Resolution layer** before OCR tokenization.
+> \* **Colab 3 Audit Breakdown (100 Extreme Edge Cases):**  
+> Recounting the 100 public evaluation rows reveals the exact operational distribution under extreme noise (mud occlusions, night glare, cursive handwriting):
+> - **20 Exact Matches (20.0%):** 100% character-for-character recovery without errors.
+> - **13 Partial Matches (13.0%):** Numerical sequence detected, but language prior hallucinated regional state prefixes (e.g. prepending `MH01` to raw digits).
+> - **26 Empty Abstentions (26.0%):** EasyOCR failed to detect character candidates; pipeline safely returned `""` without inventing plate numbers.
+> - **41 Total Mismatches (41.0%):** Severe optical degradation caused complete character extraction failure.
+>
+> 🧪 **Open Experiment (CodeFormer Super-Resolution):**  
+> The gap between Colab 1 (98% on OCR text) and Colab 3 (20% exact recovery on raw degraded pixels) defines the **optical character recognition bottleneck**. An ongoing A/B ablation experiment is evaluating whether preprocessing frames with CodeFormer GAN super-resolution can restore sufficient high-frequency features to lift exact plate recovery above the 20% baseline.
 
 ---
 
@@ -125,18 +133,22 @@ Open [`http://localhost:7860`](http://localhost:7860) for direct single-script o
 
 ## 🧪 Testing & Continuous Integration (CI/CD)
 
-The project includes an enterprise CI/CD pipeline running on GitHub Actions on every push and pull request:
+The project includes an enterprise CI/CD pipeline running on GitHub Actions on every push and pull request to guarantee code quality, schema contracts, and security compliance:
 
 ```bash
-# Run the 100-case deterministic guardrail test suite
+# Run the 100-case deterministic guardrail & integration test suite
 python -m pytest tests/ -v
 
 # Run AST security vulnerability audit
 bandit -r src/ -c bandit.yaml
 ```
 
-* **Automated Test Suite:** [`tests/test_evaluation.py`](tests/test_evaluation.py) validates Word Error Rate (WER) and entity extraction precision across 100 golden samples.
-* **Security Scanner:** [`bandit.yaml`](bandit.yaml) audits against hardcoded credentials, shell injections, and insecure deserialization.
+### Test Architecture & Empirical Integrity
+
+* **Deterministic CI Guardrail Tests ([`tests/test_evaluation.py`](tests/test_evaluation.py)):** Validates Word Error Rate (WER), fuzzy date parsing, and entity extraction precision across 100 golden samples. In CI, this suite patches the extractor to verify guardrail algorithms and mathematical metrics deterministically without exhausting external API quotas.
+* **Graceful Integration Suite ([`tests/test_integration.py`](tests/test_integration.py)):** Directly executes live end-to-end OCR and offline SLM inference on real evidence images when model weights are available, and gracefully skips when running in lightweight CI runners lacking local 5GB `.gguf` weights.
+* **Static Security Scanner ([`bandit.yaml`](bandit.yaml)):** Audits backend Python code against hardcoded credentials, SQL/shell injections, and insecure deserialization.
+* **Separation of CI Badge & Empirical Claims:** The **CI Badge** at the top confirms automated test execution, schema validation, and security scans. Empirical model accuracy claims (e.g., 98% text accuracy, 30% synthetic physical image match, and 20% degraded frame exact match) are validated on Google Colab hardware and independently verifiable via the audit logs in [`reports/`](reports/).
 * **CI Workflow Definition:** [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
 ---

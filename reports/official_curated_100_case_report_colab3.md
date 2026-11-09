@@ -9,9 +9,16 @@
 
 | Metric | Score | Target | Verdict |
 | :--- | :---: | :---: | :---: |
-| **End-to-End Recognition Accuracy** | **59.0%** | > 85.0% | ⚠️ ACTION NEEDED |
+| **Exact Plate Match Accuracy** | **20.0%** (20/100 Cases) | > 85.0% | ⚠️ ACTION NEEDED |
+| **Lenient / Abstention "PASS" Count** | **59.0%** (59/100 Cases)* | Baseline | ℹ️ AUDITED BREAKDOWN |
 | **Average End-to-End Latency** | **1.97s** | < 2.0s | ✅ REAL-TIME READY |
-| **Strict JSON Compliance Rate** | **100.0%** | 100.0% | ✅ VERIFIED |
+| **Strict JSON Compliance Rate** | **100.0%** (100/100) | 100.0% | ✅ VERIFIED |
+
+> \* **Detailed Breakdown of the 59 "PASS" Rows:**
+> - **20 Exact Matches (20.0%):** 100.0% exact character recovery (`case_002`, `case_005`, `case_006`, `case_018`, `case_019`, `case_021`, `case_022`, `case_025`, `case_027`, `case_028`, `case_029`, `case_032`, `case_035`, `case_051`, `case_054`, `case_065`, `case_072`, `case_080`, `case_081`, `case_087`).
+> - **13 Partial Matches (13.0%):** Pipeline extracted partial strings or hallucinated state prefixes under noise.
+> - **26 Empty Answers (26.0%):** Optical OCR detected zero characters; pipeline returned `""` (abstention).
+> - **41 Total Mismatches (41.0%):** Incorrect character extractions (marked FAIL).
 
 ---
 

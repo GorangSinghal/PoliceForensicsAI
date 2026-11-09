@@ -10,8 +10,8 @@
 
 | Metric | Score | Target | Status |
 | :--- | :---: | :---: | :---: |
-| **End-to-End Plate Recognition Accuracy (50 Plates)** | **30.0%** | > 85.0% | ⚠️ ACTION |
-| **Receipt Zero-Hallucination Rate (50 Receipts)** | **100.0%** | > 90.0% | ✅ CERTIFIED |
+| **End-to-End Plate Match (EasyOCR + Llama 3 SLM)** | **30.0%** (15/50 Plates) | > 85.0% | ⚠️ ACTION |
+| **Receipt Zero-Hallucination Rate (50 Receipts)** | **100.0%** (50/50, 0 false plates) | > 90.0% | ✅ CERTIFIED |
 | **Full Pipeline Latency (Pixels ➔ JSON)** | **1.80s** | < 2.0s | ✅ PRODUCTION READY |
 
 ---
